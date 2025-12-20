@@ -1,45 +1,7 @@
-type RegExSetting<T> = {default: T, aliases: {[key: string]: T}};
-interface RegExGroup<T> {
-  getValue(alias: string | undefined): T;
-  getRegexString(name: string): string;
-}
-abstract class RegExGroupBase<T> implements RegExGroup<T> {
-  abstract getValue(alias: string | undefined): T;
-  abstract getRegexOptions(): string;
-  getRegexString(name: string): string {
-    return `(?<${name}>${this.getRegexOptions()})?`;
-  }
-}
+import { AbsoluteRegExGroup, AmountRegExGroup, BasicPropertieRegExGroup, DateRegExGroup, DateTimeRegExGroup, DayRegExGroup, RelativeRegExGroup, TimeRegExGroup } from "./dateRegEx";
+import { RegExSetting } from "./regExGroup";
+import { Direction, Day, RelativeDay, Sign, Multiplier, DayDelta, Time } from "./dateProperties";
 
-class SimpleRegExGroup<T> extends RegExGroupBase<T> {
-  constructor(
-    readonly getAliases: () => {[key: string]: T},
-    readonly getDefault: () => T
-  ) {
-    super();
-  }
-
-  getValue(alias: string | undefined): T {
-    if (!alias) return this.getDefault();
-    const pattern = this.getAliases();
-    const value = pattern[alias!.toLowerCase()];
-    if (value === undefined) return this.getDefault();
-    return value;
-  }
-  getRegexOptions(): string {
-    const pattern = this.getAliases()
-    const aliases = Object.keys(pattern)
-      .sort((a, b) => b.length - a.length);
-    let regexString = '';
-    regexString += aliases.join('|');
-    return regexString;
-  }
-}
-
-enum Direction {
-  Forward = 1,
-  Backward = -1
-}
 const directionSettings: RegExSetting<Direction> = {
   default: Direction.Forward,
   aliases: {
@@ -49,20 +11,7 @@ const directionSettings: RegExSetting<Direction> = {
     'letzter': Direction.Backward
   }
 }
-const directionAliases = new SimpleRegExGroup<Direction> (
-  () => directionSettings.aliases,
-  () => directionSettings.default
-);
 
-enum Day {
-  Sunday = 0,
-  Monday,
-  Tuesday,
-  Wednesday,
-  Thursday,
-  Friday,
-  Saturday
-}
 const daySettings: RegExSetting<Day> = {
   default: Day.Monday,
   aliases: {
@@ -99,11 +48,6 @@ const daySettings: RegExSetting<Day> = {
   }
 }
 
-enum RelativeDay {
-  Yesterday = -1,
-  Today = 0,
-  Tomorrow = 1
-}
 const relativeDaysSettings: RegExSetting<RelativeDay> = {
   default: RelativeDay.Today,
   aliases: {
@@ -115,38 +59,7 @@ const relativeDaysSettings: RegExSetting<RelativeDay> = {
     'morgen': RelativeDay.Tomorrow
   }
 }
-function computeRelativeDay(RelativeDay: RelativeDay, date?: Date): Day {
-  date = date ?? new Date();
-  let day = date.getDay(); 
-  day += RelativeDay;
-  day = (day + 7) % 7;
-  return day as Day;
-}
-const dayAliases = new SimpleRegExGroup<Day>(
-  () => {
-    const relativeDays = Object.entries(relativeDaysSettings.aliases).map(([key, value]) => {
-      const day = computeRelativeDay(value);
-      return [key, day] as [string, Day];
-    });
-    const allAliases: {[key: string]: Day} = {};
-    for (let [key, value] of Object.entries(daySettings.aliases)) {
-      allAliases[key] = value;
-    }
-    for (let [key, value] of relativeDays) {
-      allAliases[key] = value;
-    }
-    return allAliases;
-  },
-  () => { 
-    const today = computeRelativeDay(relativeDaysSettings.default!);
-    return today;
-  }
-);
 
-enum Sign {
-  Back = -1,
-  Forward = 1
-}
 const signSettings: RegExSetting<Sign> = {
   default: Sign.Forward,
   aliases: {
@@ -156,17 +69,7 @@ const signSettings: RegExSetting<Sign> = {
     'vor': Sign.Back
   }
 }
-const signAliases = new SimpleRegExGroup<Sign>(
-  () => signSettings.aliases,
-  () => signSettings.default
-);
 
-enum Multiplier {
-  Day = 1,
-  Week = 7,
-  Month = 30,
-  Year = 365
-}
 const multiplierSettings: RegExSetting<Multiplier> = {
   default: Multiplier.Day,
   aliases: {
@@ -188,116 +91,79 @@ const multiplierSettings: RegExSetting<Multiplier> = {
     'jahr': Multiplier.Year,
   }
 }
-const multiplierAliases = new SimpleRegExGroup<Multiplier>(
-  () => multiplierSettings.aliases,
-  () => multiplierSettings.default
-);
-
-class AmountAliases extends RegExGroupBase<number> {
-  constructor(
-    readonly defaultAmount: number,
-  ) {
-    super();
-  }
-  override getValue(alias: string | undefined): number {
-    if (!alias) return this.defaultAmount;
-    const value = parseInt(alias);
-    if (isNaN(value)) return this.defaultAmount;
-    return value;
-  }
-  override getRegexOptions(): string {
-    return '[0-9]+';
-  }
-}
-const amountAliases = new AmountAliases(1);
-
-class Time {
-  constructor(
-    readonly hours: number,
-    readonly minutes: number,
-  ){}
-  getMinutesFromMidnight(): number {
-    return this.hours * 60 + this.minutes;
-  }
-}
-class TimeAliases extends RegExGroupBase<Time> {
-  getDefault(): Time {
-    const date = new Date();
-    return new Time(date.getHours(), date.getMinutes());
-  }
-  getValue(alias: string | undefined): Time {
-    if (!alias) return this.getDefault();
-    const regex = new RegExp(this.getRegexOptions());
-    const match = alias.match(regex);
-    if (!match) return this.getDefault();
-
-    let [hoursStr, minutesStr, ampm] = match.slice(1);
-    let hours = parseInt(hoursStr);
-    let minutes = minutesStr ? parseInt(minutesStr) : 0;
-    if (ampm === 'pm' && hours < 12) {
-      hours += 12;
-    }
-    return new Time(hours, minutes);
-  }
-  getRegexOptions(): string {
-    return '([0-9]{1,2}):?([0-9]{1,2})?\\s*(am|pm)?';
-  }
-}
-const timeAliases = new TimeAliases();
-
-export const absolutRegExString = 
-  '^\\s*'+
-  '(?<absolute>'+
-  directionAliases.getRegexString('direction') +
-  '\\s*'+
-  dayAliases.getRegexString('day') +
-  ')?'+
-  '\\s*'+
-  '(?<relative>'+
-  signAliases.getRegexString('sign') +
-  '\\s*'+
-  amountAliases.getRegexString('amount') +
-  '\\s*'+
-  multiplierAliases.getRegexString('multiplier') +
-  ')?'+
-  '\\s*'+
-  '(?:'+
-  '(\\s+|^)'+
-  timeAliases.getRegexString('time') +
-  ')?'+
-  '\\s*$';
-export const dateMatchRegex = new RegExp(
-  absolutRegExString,
-  'i'
-);
 
 export function parseDate(dateString: string, refrenceDate?: Date): Date {
-  const match = dateString.match(dateMatchRegex);
-  if (!match || !match.groups) {
-    return null;
-  }
-
-  const {direction: directionMatch, day: dayMatch, sign: signMatch, amount: amountMatch, multiplier: multiplierMatch, time: timeMatch, absolute, relative} = match.groups;
+  refrenceDate = refrenceDate ?? new Date();
+  const parser = parserConfig(refrenceDate);
   
-  const sign = signAliases.getValue(signMatch);
-  const amount = amountAliases.getValue(amountMatch);
-  const multiplier = multiplierAliases.getValue(multiplierMatch);
-  const direction = directionAliases.getValue(directionMatch);
-  const day = dayAliases.getValue(dayMatch);
-  const time = timeAliases.getValue(timeMatch);
-
-  const date = refrenceDate ? new Date(refrenceDate) : new Date();
-  if (relative) {
-    const delta = sign * amount * multiplier;
-    date.setDate(date.getDate() + delta);
+  const fullRegexString = `^\\s*${parser.getRegexString()}\\s*$`;
+  const fullRegex = new RegExp(fullRegexString, 'i');
+  const match = dateString.match(fullRegex);
+  if (!match || !match.groups) {
+    throw new Error(`Could not parse date string: ${dateString}`);
   }
-  if (absolute) {
-    do {
-      date.setDate(date.getDate() + Math.sign(direction));
-    } while (date.getDay() !== day);
+  const resultDate = parser.getValue(match.groups);
+  if (!resultDate) {
+    throw new Error(`Could not parse date string: ${dateString}`);
   }
-  date.setHours(time.hours, time.minutes, 0, 0);
-  return date;
+  return resultDate;
 }
 
 console.log("Date parser module loaded.");
+
+function parserConfig(refrenceDate: Date) {
+  const multiplierParser = new BasicPropertieRegExGroup<Multiplier>(
+    multiplierSettings.default,
+    multiplierSettings.aliases,
+    "Multiplier"
+  );
+  const amountParser = new AmountRegExGroup(
+    1,
+    "Amount"
+  );
+  const signParser = new BasicPropertieRegExGroup<Sign>(
+    signSettings.default,
+    signSettings.aliases,
+    "Sign"
+  );
+  const directionParser = new BasicPropertieRegExGroup<Direction>(
+    directionSettings.default,
+    directionSettings.aliases,
+    "Direction"
+  );
+  const dayParser = new DayRegExGroup(
+    refrenceDate,
+    "Day",
+    relativeDaysSettings.aliases,
+    daySettings.aliases
+  );
+  const relativeParser = new RelativeRegExGroup(
+    new DayDelta(0),
+    "RelativeDate",
+    signParser,
+    amountParser,
+    multiplierParser
+  );
+  const absoluteParser = new AbsoluteRegExGroup(
+    new DayDelta(0),
+    "AbsoluteDate",
+    directionParser,
+    dayParser,
+    refrenceDate.getDay()
+  );
+  const dateParser = new DateRegExGroup(
+    absoluteParser,
+    relativeParser,
+    "Date"
+  );
+  const timeParser = new TimeRegExGroup(
+    new Time(refrenceDate.getHours(), refrenceDate.getMinutes()),
+    "Time"
+  );
+  const parser = new DateTimeRegExGroup(
+    dateParser,
+    timeParser,
+    "DateTime"
+  );
+  return parser;
+}
