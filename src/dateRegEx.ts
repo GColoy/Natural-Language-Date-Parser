@@ -121,7 +121,7 @@ export class AbsoluteRegExGroup implements RegExGroup<DayDelta> {
     return new DayDelta(delta);
   }
   getRegexString(): string {
-    return `(?<${this.groupName}>${this.dayParser.getRegexString()}\\s*${this.directionParser.getRegexString()})?`;
+    return `(?<${this.groupName}>${this.directionParser.getRegexString()}\\s*${this.dayParser.getRegexString()})?`;
   }
 
 }
