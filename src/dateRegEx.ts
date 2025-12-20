@@ -184,6 +184,6 @@ export class DateTimeRegExGroup implements RegExGroup<Date> {
     return date;
   }
   getRegexString(): string {
-    return `(?<${this.groupName}>${this.dateParser.getRegexString()}\\s*(?(\\s+|^)${this.timeParser.getRegexString()}))?`;
+    return `(?<${this.groupName}>${this.dateParser.getRegexString()}\\s*(?:(\\s+|^)${this.timeParser.getRegexString()})?)?`;
   }
 }
