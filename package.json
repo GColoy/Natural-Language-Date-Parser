@@ -4,8 +4,7 @@
   "description": "a package to parse natural lanugate dates into actual dates",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.json"
+    "test": "npx tsx test/test.ts",
   },
   "repository": {
     "type": "git",

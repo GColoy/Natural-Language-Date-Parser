@@ -271,7 +271,7 @@ export const dateMatchRegex = new RegExp(
   'i'
 );
 
-export function parseDate(dateString: string) {
+export function parseDate(dateString: string, refrenceDate?: Date): Date {
   const match = dateString.match(dateMatchRegex);
   if (!match || !match.groups) {
     return null;
@@ -286,7 +286,7 @@ export function parseDate(dateString: string) {
   const day = dayAliases.getValue(dayMatch);
   const time = timeAliases.getValue(timeMatch);
 
-  const date = new Date();
+  const date = refrenceDate ? new Date(refrenceDate) : new Date();
   if (relative) {
     const delta = sign * amount * multiplier;
     date.setDate(date.getDate() + delta);
@@ -300,22 +300,4 @@ export function parseDate(dateString: string) {
   return date;
 }
 
-function test() {
-  const testStrings = [
-    "next monday 14:30",
-    "letzter freitag 9am",
-    "in 3 days",
-    "vor 2 wochen 18:00",
-    "tomorrow",
-    "gestern 12:15pm",
-    "nächster sonntag",
-    "in 1 month 08:00",
-  ];
-  for (const testString of testStrings) {
-    const parsedDate = parseDate(testString);
-    console.log(`Input: "${testString}" => Parsed Date: ${parsedDate}`);
-  }
-}
-// Uncomment to run tests
-test();
 console.log("Date parser module loaded.");
