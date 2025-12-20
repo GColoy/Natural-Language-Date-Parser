@@ -9,11 +9,11 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "preLaunchTask": "tsc: build - tsconfig.json",
+      "preLaunchTask": "npm: build",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/out/dateParser.js",
+      "program": "${workspaceFolder}/out/.js",
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]
