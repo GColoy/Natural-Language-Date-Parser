@@ -115,7 +115,7 @@ export class AbsoluteRegExGroup implements RegExGroup<DayDelta> {
     const direction = this.directionParser.getValue(matchGroups);
     const day = this.dayParser.getValue(matchGroups);
     let delta = direction;
-    while (this.currentDay + delta % 7 !== day) {
+    while ((this.currentDay + delta) % 7 !== day) {
       delta += direction;
     }
     return new DayDelta(delta);
