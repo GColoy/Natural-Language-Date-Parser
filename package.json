@@ -1,0 +1,23 @@
+{
+  "name": "dateparser",
+  "version": "1.0.0",
+  "description": "a package to parse natural lanugate dates into actual dates",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GColoy/Natural-Language-Date-Parser.git"
+  },
+  "author": "Felix Camrath",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GColoy/Natural-Language-Date-Parser/issues"
+  },
+  "homepage": "https://github.com/GColoy/Natural-Language-Date-Parser#readme",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
