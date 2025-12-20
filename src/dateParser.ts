@@ -109,44 +109,42 @@ export function parseDate(dateString: string, refrenceDate?: Date): Date {
   return resultDate;
 }
 
-console.log("Date parser module loaded.");
-
-function parserConfig(refrenceDate: Date) {
+export function parserConfig(refrenceDate: Date) {
   const multiplierParser = new BasicPropertieRegExGroup<Multiplier>(
     multiplierSettings.default,
     multiplierSettings.aliases,
-    "Multiplier"
+    "main_Date_Relative_Multiplier"
   );
   const amountParser = new AmountRegExGroup(
     1,
-    "Amount"
+    "main_Date_Relative_Amount"
   );
   const signParser = new BasicPropertieRegExGroup<Sign>(
     signSettings.default,
     signSettings.aliases,
-    "Sign"
+    "main_Date_Relative_Sign"
   );
   const directionParser = new BasicPropertieRegExGroup<Direction>(
     directionSettings.default,
     directionSettings.aliases,
-    "Direction"
+    "main_Date_Absolute_Direction"
   );
   const dayParser = new DayRegExGroup(
     refrenceDate,
-    "Day",
+    "main_Date_Absolute_Day",
     relativeDaysSettings.aliases,
     daySettings.aliases
   );
   const relativeParser = new RelativeRegExGroup(
     new DayDelta(0),
-    "RelativeDate",
+    "main_Date_Relative",
     signParser,
     amountParser,
     multiplierParser
   );
   const absoluteParser = new AbsoluteRegExGroup(
     new DayDelta(0),
-    "AbsoluteDate",
+    "main_Date_Absolute",
     directionParser,
     dayParser,
     refrenceDate.getDay()
@@ -154,16 +152,16 @@ function parserConfig(refrenceDate: Date) {
   const dateParser = new DateRegExGroup(
     absoluteParser,
     relativeParser,
-    "Date"
+    "main_Date"
   );
   const timeParser = new TimeRegExGroup(
     new Time(refrenceDate.getHours(), refrenceDate.getMinutes()),
-    "Time"
+    "main_Time"
   );
   const parser = new DateTimeRegExGroup(
     dateParser,
     timeParser,
-    "DateTime"
+    "main"
   );
   return parser;
 }
