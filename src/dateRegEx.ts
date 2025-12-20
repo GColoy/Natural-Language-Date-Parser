@@ -37,8 +37,10 @@ export class DayRegExGroup extends BasicRegExGroup<Day> {
       const day = this.computeRelativeDay(value);
       return [key, day] as [string, Day];
     });
+    const absoluteDays = Object.entries(this.daySettings);
+
     const allAliases: {[key: string]: Day} = {};
-    for (let [key, value] of Object.entries(this.daySettings.aliases)) {
+    for (let [key, value] of absoluteDays) {
       allAliases[key] = value;
     }
     for (let [key, value] of relativeDays) {
