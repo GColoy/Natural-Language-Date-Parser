@@ -1,6 +1,5 @@
 import { BasicRegExGroup, RegExGroup, RegExGroupBase } from "./regExGroup";
 import { Day, DayDelta, Direction, Multiplier, RelativeDay, Sign } from "./dateProperties";
-import { Time } from "./timeProperties";
 
 export type dateAliasSettings<T> = {value: T, aliases: string[]}[];
 
@@ -105,34 +104,6 @@ export class AmountRegExGroup extends RegExGroupBase<number> {
   }
 }
 
-export class TimeRegExGroup extends RegExGroupBase<Time> {
-  constructor (
-    readonly refrenceTime: Time,
-    groupName: string
-  ) {super(groupName);}
-  getDefault(): Time {
-    return this.refrenceTime;
-  }
-  getValue(matchGroups: { [key: string]: string }): Time {
-    const alias = matchGroups[this.groupName];
-    if (!alias) return this.getDefault();
-    const regex = new RegExp(this.getRegexOptions());
-    const match = alias.match(regex);
-    if (!match) return this.getDefault();
-
-    let [hoursStr, minutesStr, ampm] = match.slice(1);
-    let hours = parseInt(hoursStr);
-    let minutes = minutesStr ? parseInt(minutesStr) : 0;
-    if (ampm === 'pm' && hours < 12) {
-      hours += 12;
-    }
-    return new Time(hours, minutes);
-  }
-  getRegexOptions(): string {
-    return '([0-9]{1,2}):?([0-9]{1,2})?\\s*(am|pm)?';
-  }
-}
-
 export class AbsoluteRegExGroup implements RegExGroup<DayDelta> {
   constructor(
     readonly deltaIfAbsent: DayDelta,
@@ -203,24 +174,3 @@ export class DateRegExGroup implements RegExGroup<Date> {
     return `(?<${this.groupName}>${this.absoluteParser.getRegexString()}\\s*${this.relativeParser.getRegexString()})?`;
   }
 }
-
-export class DateTimeRegExGroup implements RegExGroup<Date> {
-  constructor(
-    readonly dateParser: RegExGroup<Date>,
-    readonly timeParser: RegExGroup<Time>,
-    readonly groupName: string,
-  ) { }
-  getValue(matchGroups: { [key: string]: string; }): Date {
-    const match = matchGroups[this.groupName];
-    if (!match) return null;
-    const time = this.timeParser.getValue(matchGroups);
-    const date = this.dateParser.getValue(matchGroups);
-
-    date.setHours(time.hours, time.minutes, 0, 0);
-    return date;
-  }
-  getRegexString(): string {
-    return `(?<${this.groupName}>${this.dateParser.getRegexString()}\\s*(?:(\\s+|^)${this.timeParser.getRegexString()})?)?`;
-  }
-}
-
