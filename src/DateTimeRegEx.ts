@@ -1,5 +1,5 @@
 import { RegExGroup } from "./regExGroup";
-import { Time } from "./timeProperties";
+import { Time } from "./time/timeProperties";
 
 export class DateTimeRegExGroup implements RegExGroup<Date> {
   constructor(

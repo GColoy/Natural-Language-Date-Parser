@@ -1,9 +1,9 @@
 import { AbsoluteRegExGroup, AmountRegExGroup, BasicPropertieRegExGroup, DateDefaults, DateRegExGroup, DayRegExGroup, FullDateAliasSettings, RelativeRegExGroup} from "./natural_language_date/dateRegEx";
 import { RegExGroup } from "./regExGroup";
 import { Direction, Sign, Multiplier, DayDelta } from "./natural_language_date/dateProperties";
-import { Time } from "./timeProperties";
+import { Time } from "./time/timeProperties";
 import { DateTimeRegExGroup } from "./DateTimeRegEx";
-import { TimeRegExGroup } from "./timeRegEx";
+import { TimeRegExGroup } from "./time/timeRegEx";
 
 export class DateParser implements RegExGroup<Date> {
   readonly parser: DateTimeRegExGroup;

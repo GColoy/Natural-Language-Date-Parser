@@ -1,4 +1,4 @@
-import { RegExGroupBase } from "./regExGroup";
+import { RegExGroupBase } from "../regExGroup";
 import { Time } from "./timeProperties";
 
 export class TimeRegExGroup extends RegExGroupBase<Time> {
