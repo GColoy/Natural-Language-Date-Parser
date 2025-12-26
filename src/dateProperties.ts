@@ -16,7 +16,8 @@ export enum Day {
 export enum RelativeDay {
   Yesterday = -1,
   Today = 0,
-  Tomorrow = 1
+  Tomorrow = 1,
+  Week = 7
 }
 
 export enum Sign {
