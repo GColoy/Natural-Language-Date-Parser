@@ -1,21 +1,50 @@
-import { dir } from "node:console";
 import { BasicRegExGroup, RegExGroup, RegExGroupBase } from "./regExGroup";
 import { Day, DayDelta, Direction, Multiplier, RelativeDay, Sign, Time } from "./dateProperties";
 
+export type dateAliasSettings<T> = {value: T, aliases: string[]}[];
+
+export type FullDateAliasSettings = {
+  direction: dateAliasSettings<Direction>,
+  day: dateAliasSettings<Day>,
+  relativeDays: dateAliasSettings<RelativeDay>,
+  sign: dateAliasSettings<Sign>,
+  multiplier: dateAliasSettings<Multiplier>
+}
+
+export type DateDefaults = {
+  direction: Direction,
+  relativeDays: RelativeDay,
+  sign: Sign,
+  multiplier: Multiplier
+}
+
+function invertSettings<T>(aliases: dateAliasSettings<T>): { [key: string]: T; } {
+  let aliasesMap: {[key: string]: T} = {};
+  for (let setting of aliases) {
+    for (let alias of setting.aliases) {
+      aliasesMap[alias.toLowerCase()] = setting.value;
+    }
+  }
+  return aliasesMap;
+}
+
 export class BasicPropertieRegExGroup<T> extends BasicRegExGroup<T> {
+  aliasesMap: {[key: string]: T} = {};
   constructor(
     readonly defaultDirection: T,
-    readonly aliases: {[key: string]: T},
+    readonly aliases: dateAliasSettings<T>,
     readonly groupName: string
   ) {
     super(groupName);
+
+    this.aliasesMap = invertSettings(aliases);
   }
   
   getDefault(): T{
     return this.defaultDirection;
   }
   getAliases(): { [key: string]: T; } {
-    return this.aliases;
+    return this.aliasesMap;
   }
 }
 
@@ -23,11 +52,11 @@ export class DayRegExGroup extends BasicRegExGroup<Day> {
   readonly refrenceDate: Date;
   readonly relativeDaysSettings: {[key: string]: RelativeDay};
   readonly daySettings: {[key: string]: Day};
-  constructor(refrenceDate: Date, groupName: string, relativeDaysSettings: {[key: string]: RelativeDay}, daySettings: {[key: string]: Day}) {
+  constructor(refrenceDate: Date, groupName: string, relativeDaysSettings: dateAliasSettings<RelativeDay>, daySettings: dateAliasSettings<Day>) {
     super(groupName);
     this.refrenceDate = new Date(refrenceDate);
-    this.relativeDaysSettings = relativeDaysSettings;
-    this.daySettings = daySettings;
+    this.relativeDaysSettings = invertSettings(relativeDaysSettings);
+    this.daySettings = invertSettings(daySettings);
   }
   getDefault(): Day {
     return this.refrenceDate.getDay() as Day;
@@ -152,8 +181,8 @@ export class RelativeRegExGroup implements RegExGroup<DayDelta> {
 
 export class DateRegExGroup implements RegExGroup<DayDelta> {
   constructor(
-    readonly absoluteParser: AbsoluteRegExGroup,
-    readonly relativeParser: RelativeRegExGroup,
+    readonly absoluteParser: RegExGroup<DayDelta>,
+    readonly relativeParser: RegExGroup<DayDelta>,
     readonly groupName: string
   ) { }
   getValue(matchGroups: { [key: string]: string; }): DayDelta {
@@ -171,16 +200,18 @@ export class DateRegExGroup implements RegExGroup<DayDelta> {
 
 export class DateTimeRegExGroup implements RegExGroup<Date> {
   constructor(
-    readonly dateParser: DateRegExGroup,
-    readonly timeParser: TimeRegExGroup,
-    readonly groupName: string
+    readonly dateParser: RegExGroup<DayDelta>,
+    readonly timeParser: RegExGroup<Time>,
+    readonly groupName: string,
+    readonly refrenceDate: Date
   ) { }
   getValue(matchGroups: { [key: string]: string; }): Date {
     const match = matchGroups[this.groupName];
     if (!match) return null;
     const dayDelta = this.dateParser.getValue(matchGroups);
     const time = this.timeParser.getValue(matchGroups);
-    const date = new Date();
+
+    const date = new Date(this.refrenceDate);
     date.setDate(date.getDate() + dayDelta.days);
     date.setHours(time.hours, time.minutes, 0, 0);
     return date;
@@ -189,3 +220,4 @@ export class DateTimeRegExGroup implements RegExGroup<Date> {
     return `(?<${this.groupName}>${this.dateParser.getRegexString()}\\s*(?:(\\s+|^)${this.timeParser.getRegexString()})?)?`;
   }
 }
+
