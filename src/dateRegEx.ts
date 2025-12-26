@@ -179,19 +179,24 @@ export class RelativeRegExGroup implements RegExGroup<DayDelta> {
   }
 }
 
-export class DateRegExGroup implements RegExGroup<DayDelta> {
+export class DateRegExGroup implements RegExGroup<Date> {
   constructor(
     readonly absoluteParser: RegExGroup<DayDelta>,
     readonly relativeParser: RegExGroup<DayDelta>,
-    readonly groupName: string
+    readonly groupName: string,
+    readonly refrenceDate: Date
   ) { }
-  getValue(matchGroups: { [key: string]: string; }): DayDelta {
+
+  getValue(matchGroups: { [key: string]: string; }) {
     const match = matchGroups[this.groupName];
-    if (!match) return new DayDelta(0);
+    if (!match) return new Date(this.refrenceDate);
     const absoluteDelta = this.absoluteParser.getValue(matchGroups);
     const relativeDelta = this.relativeParser.getValue(matchGroups);
     const totalDelta = absoluteDelta.days + relativeDelta.days;
-    return new DayDelta(totalDelta);
+
+    const date = new Date(this.refrenceDate);
+    date.setDate(date.getDate() + totalDelta);
+    return date;
   }
   getRegexString(): string {
     return `(?<${this.groupName}>${this.absoluteParser.getRegexString()}\\s*${this.relativeParser.getRegexString()})?`;
@@ -200,19 +205,16 @@ export class DateRegExGroup implements RegExGroup<DayDelta> {
 
 export class DateTimeRegExGroup implements RegExGroup<Date> {
   constructor(
-    readonly dateParser: RegExGroup<DayDelta>,
+    readonly dateParser: RegExGroup<Date>,
     readonly timeParser: RegExGroup<Time>,
     readonly groupName: string,
-    readonly refrenceDate: Date
   ) { }
   getValue(matchGroups: { [key: string]: string; }): Date {
     const match = matchGroups[this.groupName];
     if (!match) return null;
-    const dayDelta = this.dateParser.getValue(matchGroups);
     const time = this.timeParser.getValue(matchGroups);
+    const date = this.dateParser.getValue(matchGroups);
 
-    const date = new Date(this.refrenceDate);
-    date.setDate(date.getDate() + dayDelta.days);
     date.setHours(time.hours, time.minutes, 0, 0);
     return date;
   }

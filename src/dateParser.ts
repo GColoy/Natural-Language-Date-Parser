@@ -85,7 +85,8 @@ export class DateParser implements RegExGroup<Date> {
     const dateParser = new DateRegExGroup(
       absoluteParser,
       relativeParser,
-      "main_Date"
+      "main_Date",
+      refrenceDate
     );
     const timeParser = new TimeRegExGroup(
       new Time(refrenceDate.getHours(), refrenceDate.getMinutes()),
@@ -94,8 +95,7 @@ export class DateParser implements RegExGroup<Date> {
     const parser = new DateTimeRegExGroup(
       dateParser,
       timeParser,
-      "main",
-      refrenceDate
+      "main"
     );
     return parser;
   }
