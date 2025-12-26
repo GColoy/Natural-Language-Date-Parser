@@ -26,6 +26,7 @@ export abstract class BasicRegExGroup<T> extends RegExGroupBase<T> {
     if (value === undefined) return this.getDefault();
     return value;
   }
+
   getRegexOptions(): string {
     const pattern = this.getAliases()
     const aliases = Object.keys(pattern)
@@ -35,13 +36,3 @@ export abstract class BasicRegExGroup<T> extends RegExGroupBase<T> {
     return regexString;
   }
 }
-
-export class SimpleRegExGroup<T> extends BasicRegExGroup<T> {
-  constructor(
-    readonly getAliases: () => {[key: string]: T},
-    readonly getDefault: () => T
-  ) {
-    super("name");
-  }
-}
-
