@@ -1,7 +1,7 @@
 import assert from "assert";
 import test from "node:test";
 import { DateParser } from "../src/dateParser";
-import { dateDefaults, English, German } from "../src/data";
+import { dateDefaults, English, German } from "../src/natural_language_date/data";
 
 test("common input testing", async (TestContext) => {
   const refrenceDate = new Date("Mon Dec 20 2025 14:31:00 GMT+0100");

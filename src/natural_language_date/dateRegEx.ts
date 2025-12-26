@@ -1,4 +1,4 @@
-import { BasicRegExGroup, RegExGroup, RegExGroupBase } from "./regExGroup";
+import { BasicRegExGroup, RegExGroup, RegExGroupBase } from "../regExGroup";
 import { Day, DayDelta, Direction, Multiplier, RelativeDay, Sign } from "./dateProperties";
 
 export type dateAliasSettings<T> = {value: T, aliases: string[]}[];
