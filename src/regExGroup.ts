@@ -36,3 +36,32 @@ export abstract class BasicRegExGroup<T> extends RegExGroupBase<T> {
     return regexString;
   }
 }
+
+export class MultiRegEx<T> implements RegExGroup<T> {
+  constructor(
+    readonly groups: RegExGroup<T>[],
+    readonly defaultValue: T,
+    readonly groupName: string,
+  ) {}
+
+  getValue(matchGroups: { [key: string]: string; }): T {
+    for (let i = 0; i < this.groups.length; i++) {
+      const match = matchGroups[this.getGroupName(i)]
+      if (!match) continue;
+      const group = this.groups[i];
+      return group.getValue(matchGroups);
+    }
+    return this.defaultValue;
+  }
+
+  getRegexString(): string {
+    const joinedString = this.groups.reduce<string>((acc, curr, index) => {
+      return acc + `${acc === "" ? "" : "|"}` + `(?<${this.getGroupName(index)}>` + curr.getRegexString() + ")";
+    }, "")
+    return `(${joinedString})`;
+  }
+
+  getGroupName(index: number) {
+    return `${this.groupName}_${index}`;
+  }
+}

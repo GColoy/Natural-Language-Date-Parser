@@ -1,12 +1,22 @@
-import { dateDefaults, simpleDateAliasSettings } from "../src/data";
-import { DateParser } from "../src/dateParser";
+import { DateTimeParser } from "../src/dateParser"
+import { dateDefaults, English, German } from "../src/natural_language_date/data"
+import * as naturalLanguageParser from "../src/natural_language_date/parser";
+import { MultiRegEx } from "../src/regExGroup";
+import * as timeParser from "../src/time/parser"
 
-const Parser = new DateParser(
-  new Date(),
-  simpleDateAliasSettings,
-  dateDefaults
+const refrenceDate = new Date();
+const parser = new DateTimeParser(
+  new MultiRegEx([
+      naturalLanguageParser.parserConfig(German, "German"),
+      naturalLanguageParser.parserConfig(English, "Englisch"),
+    ],
+    refrenceDate,
+    "Multi"
+  ),
+  timeParser.parserConfig(refrenceDate)
 )
 
+
 console.log(
-  Parser.getRegexString()
+  parser.getRegexString()
 )

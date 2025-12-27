@@ -5,14 +5,17 @@ import { Time } from "./time/timeProperties";
 import { DateTimeRegExGroup } from "./DateTimeRegEx";
 import { TimeRegExGroup } from "./time/timeRegEx";
 
-export class DateParser implements RegExGroup<Date> {
+export class DateTimeParser implements RegExGroup<Date> {
   readonly parser: DateTimeRegExGroup;
   constructor(
-    readonly refrenceDate: Date,
-    settings: FullDateAliasSettings,
-    defaults: DateDefaults
+    dateParser: RegExGroup<Date>,
+    timeParser: RegExGroup<Time>
   ) {
-    this.parser = DateParser.parserConfig(settings, defaults, this.refrenceDate);
+    this.parser = new DateTimeRegExGroup(
+      dateParser,
+      timeParser,
+      "main"
+    );
   }
 
   public parseDate(dateString: string): Date {
@@ -42,64 +45,5 @@ export class DateParser implements RegExGroup<Date> {
 
   getRegexString(): string {
     return `^\\s*${this.parser.getRegexString()}\\s*$`;
-  }
-
-  static parserConfig(settings: FullDateAliasSettings, defaults: DateDefaults,
-  refrenceDate: Date): DateTimeRegExGroup {
-    const multiplierParser = new BasicPropertieRegExGroup<Multiplier>(
-      defaults.multiplier,
-      settings.multiplier,
-      "main_Date_Relative_Multiplier"
-    );
-    const amountParser = new AmountRegExGroup(
-      1,
-      "main_Date_Relative_Amount"
-    );
-    const signParser = new BasicPropertieRegExGroup<Sign>(
-      defaults.sign,
-      settings.sign,
-      "main_Date_Relative_Sign"
-    );
-    const directionParser = new BasicPropertieRegExGroup<Direction>(
-      defaults.direction,
-      settings.direction,
-      "main_Date_Absolute_Direction"
-    );
-    const dayParser = new DayRegExGroup(
-      refrenceDate,
-      "main_Date_Absolute_Day",
-      settings.relativeDays,
-      settings.day
-    );
-    const relativeParser = new RelativeRegExGroup(
-      new DayDelta(0),
-      "main_Date_Relative",
-      signParser,
-      amountParser,
-      multiplierParser
-    );
-    const absoluteParser = new AbsoluteRegExGroup(
-      new DayDelta(0),
-      "main_Date_Absolute",
-      directionParser,
-      dayParser,
-      refrenceDate.getDay()
-    );
-    const dateParser = new DateRegExGroup(
-      absoluteParser,
-      relativeParser,
-      "main_Date",
-      refrenceDate
-    );
-    const timeParser = new TimeRegExGroup(
-      new Time(refrenceDate.getHours(), refrenceDate.getMinutes()),
-      "main_Time"
-    );
-    const parser = new DateTimeRegExGroup(
-      dateParser,
-      timeParser,
-      "main"
-    );
-    return parser;
   }
 }
